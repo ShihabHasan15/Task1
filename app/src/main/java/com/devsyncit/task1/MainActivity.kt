@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
             for (record in recordX!!){
                 val id = record.id
                 val type = record.type
+                val question = record.question
 
                 if(type.equals("multipleChoice")){
                     val options = record.options
