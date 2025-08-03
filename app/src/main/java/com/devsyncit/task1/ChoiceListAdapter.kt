@@ -28,6 +28,9 @@ class ChoiceListAdapter(var option_list: List<Option>): BaseAdapter() {
 
         var optionRadioButton = optionView.findViewById<RadioButton>(R.id.option)
 
+        var option = option_list[position]
+
+        optionRadioButton.text = option.value
 
         return optionView
     }
