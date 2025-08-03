@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
+import android.widget.CompoundButton
 import android.widget.RadioButton
 
 class ChoiceListAdapter(var option_list: List<Option>): BaseAdapter() {
@@ -31,6 +32,19 @@ class ChoiceListAdapter(var option_list: List<Option>): BaseAdapter() {
         var option = option_list[position]
 
         optionRadioButton.text = option.value
+
+        optionRadioButton.setOnCheckedChangeListener(object : CompoundButton.OnCheckedChangeListener{
+            override fun onCheckedChanged(p0: CompoundButton?, p1: Boolean) {
+
+                if (p1 == true){
+
+
+
+                }
+
+            }
+
+        })
 
         return optionView
     }
