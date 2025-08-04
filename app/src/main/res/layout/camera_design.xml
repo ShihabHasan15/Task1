@@ -13,22 +13,17 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         android:layout_marginTop="10dp"
-        android:layout_marginLeft="10dp"/>
+        android:layout_marginLeft="10dp"
+        android:textColor="@color/black"/>
 
-    <RadioGroup
-        android:id="@+id/optionRadioGroup"
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/ok_btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:text="Okay"
+        android:backgroundTint="@color/black"
         app:layout_constraintTop_toBottomOf="@+id/question"
-        app:layout_constraintLeft_toLeftOf="@+id/question"
-        android:layout_marginTop="10dp"
-        android:visibility="visible">
-
-    </RadioGroup>
-
-
-
-
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginTop="10dp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

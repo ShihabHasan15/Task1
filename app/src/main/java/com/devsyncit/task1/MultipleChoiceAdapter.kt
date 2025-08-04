@@ -5,10 +5,12 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.ListView
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
+import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 
@@ -40,6 +42,7 @@ class MultipleChoiceAdapter(var question: List<HashMap<String, Any?>>,
 
         var question = question[position]
         var slug = question["question"].toString()
+        var questionType = question["type"].toString()
         var options = question["options"] as? MutableList<HashMap<String, String>> ?: emptyList()
         holder.questionTxt.text = slug
 
@@ -63,18 +66,23 @@ class MultipleChoiceAdapter(var question: List<HashMap<String, Any?>>,
 
             radioButton.setOnClickListener {
                 Log.d("selectedButton", "Option : "+optionValue+", Refer To: "+referTo)
+
+
+
             }
+
+
 
             holder.radioGroup.addView(radioButton)
         }
 
-        holder.radioGroup.setOnCheckedChangeListener { radioGroup, i ->
+        holder.radioGroup.setOnCheckedChangeListener { radioGroup, id ->
 
             var selectedId = holder.radioGroup.checkedRadioButtonId
 
             Log.d("selectedId", selectedId.toString())
 
-            var radioButton: View = radioGroup.findViewById(i)
+            var radioButton: View = radioGroup.findViewById(id)
             var index = radioGroup.indexOfChild(radioButton)
 
 
