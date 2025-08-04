@@ -12,8 +12,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 
-class MultipleChoiceAdapter(var question: List<HashMap<String, String>>,
-                            var options: List<HashMap<String, String>>,
+class MultipleChoiceAdapter(var question: List<HashMap<String, Any?>>,
                             var numberInput: List<HashMap<String, String>>,
     var context: Context): RecyclerView.Adapter<MultipleChoiceAdapter.MultipleChoiceViewHolder>(){
 
@@ -40,13 +39,17 @@ class MultipleChoiceAdapter(var question: List<HashMap<String, String>>,
     override fun onBindViewHolder(holder: MultipleChoiceViewHolder, position: Int) {
 
         var question = question[position]
-        var slug = question["question"]
+        var slug = question["question"].toString()
+        var options = question["options"] as? MutableList<HashMap<String, String>> ?: emptyList()
         holder.questionTxt.text = slug
+
+        holder.radioGroup.removeAllViews()
 
 
         for (option in options){
 
             var optionValue = option.get("value")
+            var referTo = option.get("referTo")
             var radioButton = RadioButton(context)
             radioButton.text = optionValue
             radioButton.id = View.generateViewId()
@@ -57,6 +60,10 @@ class MultipleChoiceAdapter(var question: List<HashMap<String, String>>,
             )
 
             radioButton.layoutParams = params
+
+            radioButton.setOnClickListener {
+                Log.d("selectedButton", "Option : "+optionValue+", Refer To: "+referTo)
+            }
 
             holder.radioGroup.addView(radioButton)
         }

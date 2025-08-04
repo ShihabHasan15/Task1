@@ -17,9 +17,8 @@ import kotlinx.coroutines.withContext
 class MainActivity : AppCompatActivity() {
 
     lateinit var optionMap: HashMap<String, String>
-    var optionList: MutableList<HashMap<String, String>> = mutableListOf()
-    lateinit var questionMap: HashMap<String, String>
-    var questionList: MutableList<HashMap<String, String>> = mutableListOf()
+    lateinit var questionMap: HashMap<String, Any?>
+    var questionList: MutableList<HashMap<String, Any?>> = mutableListOf()
     lateinit var numberInputMap: HashMap<String, String>
     var numberInputList: MutableList<HashMap<String, String>> = mutableListOf()
 
@@ -36,10 +35,9 @@ class MainActivity : AppCompatActivity() {
 
         //multiple choice question adapter set up
 
-        var multipleChoiceAdapter = MultipleChoiceAdapter(questionList, optionList, numberInputList, this)
+        var multipleChoiceAdapter = MultipleChoiceAdapter(questionList, numberInputList, this)
         item_list.adapter = multipleChoiceAdapter
         item_list.layoutManager = LinearLayoutManager(this)
-
 
         lifecycleScope.launch {
             val records = retroInstance.getRecord().body()
@@ -58,6 +56,8 @@ class MainActivity : AppCompatActivity() {
                 if(type.equals("multipleChoice")){
                     val options = record.options
 
+                    var optionList: MutableList<HashMap<String, String>> = mutableListOf()
+
                     for (option in options){
                         optionMap = HashMap()
                         val value = option.value
@@ -67,6 +67,8 @@ class MainActivity : AppCompatActivity() {
                         optionMap.put("referTo", referTo)
                         optionList.add(optionMap)
                     }
+
+                    questionMap.put("options", optionList)
 
                     questionList.add(questionMap)
 
@@ -95,6 +97,7 @@ class MainActivity : AppCompatActivity() {
 
             Log.d("records", ""+records?.record)
         }
+
 
     }
 }
