@@ -27,14 +27,6 @@
     </RadioGroup>
 
 
-    <EditText
-        android:id="@+id/edittext"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@+id/question"
-        app:layout_constraintLeft_toLeftOf="@+id/question"
-        android:layout_marginTop="10dp"
-        />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
