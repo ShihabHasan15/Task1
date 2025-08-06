@@ -17,14 +17,39 @@
         android:layout_marginLeft="10dp"/>
 
 
-    <CheckBox
-        android:id="@+id/checkbox"
+    <LinearLayout
+        android:id="@+id/checkbox_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@+id/question"
         app:layout_constraintLeft_toLeftOf="@+id/question"
         android:layout_marginTop="10dp"
+        android:orientation="vertical"
         />
+
+
+    <Button
+        android:id="@+id/next_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Next"
+        app:layout_constraintTop_toBottomOf="@+id/checkbox_layout"
+        app:layout_constraintRight_toRightOf="parent"
+        android:backgroundTint="@color/black"
+        android:textColor="@color/white"/>
+
+    <Button
+        android:id="@+id/skip_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Skip"
+        android:textColor="@color/black"
+        android:visibility="visible"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        app:layout_constraintTop_toTopOf="@+id/next_btn"
+        app:layout_constraintBottom_toBottomOf="@+id/next_btn"
+        app:layout_constraintRight_toLeftOf="@+id/next_btn"
+        android:layout_marginRight="20dp"/>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
