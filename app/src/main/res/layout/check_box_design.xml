@@ -5,6 +5,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="10dp">
 
+
     <TextView
         android:id="@+id/question"
         android:layout_width="wrap_content"
@@ -15,20 +16,15 @@
         android:layout_marginTop="10dp"
         android:layout_marginLeft="10dp"/>
 
-    <RadioGroup
-        android:id="@+id/optionRadioGroup"
+
+    <CheckBox
+        android:id="@+id/checkbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         app:layout_constraintTop_toBottomOf="@+id/question"
         app:layout_constraintLeft_toLeftOf="@+id/question"
         android:layout_marginTop="10dp"
-        android:visibility="visible">
-
-    </RadioGroup>
-
-
-
+        />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
