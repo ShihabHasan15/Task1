@@ -67,6 +67,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var userAnswerMap: HashMap<String, Any>
     var userAnswerList: MutableList<HashMap<String, Any>> = mutableListOf()
     lateinit var linearLayout: LinearLayout
+    lateinit var see_record_btn: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,6 +76,8 @@ class MainActivity : AppCompatActivity() {
         val retroInstance = RetrofitInstance.getInstance().create(ApiService::class.java)
 
         linearLayout = findViewById(R.id.rootLayout)
+
+        see_record_btn = findViewById(R.id.see_record_btn)
 
         //multiple choice question adapter set up
 
@@ -147,7 +150,6 @@ class MainActivity : AppCompatActivity() {
 //
 //            Log.d("records", ""+records?.record)
         }
-
 
     }
 
@@ -260,6 +262,8 @@ class MainActivity : AppCompatActivity() {
         userAnswerMap = HashMap()
         userAnswerMap.put("question", question)
 
+        val userRecord = UserRecord()
+        userRecord.question = question
 
         radioGroup.setOnCheckedChangeListener { radioGroup, checkedId ->
 
@@ -268,9 +272,14 @@ class MainActivity : AppCompatActivity() {
             Log.d("childCount", linearLayout.childCount.toString())
             val selectedBtn = radioGroup.findViewById<RadioButton>(checkedId)
 
+
+            val answers = mutableListOf<String>()
+            answers.add(selectedBtn.text.toString())
+            userRecord.answer = answers
+
             userAnswerMap.put("answer", selectedBtn.text)
 
-            Log.d("userList", userAnswerList.toString())
+            Log.d("userChoice", ""+question+", "+userRecord.answer)
 
 
             val nextId = selectedBtn.tag as String
