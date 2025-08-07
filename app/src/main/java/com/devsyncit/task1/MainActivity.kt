@@ -65,9 +65,11 @@ class MainActivity : AppCompatActivity() {
     lateinit var numberInputMap: HashMap<String, String>
     var numberInputList: MutableList<HashMap<String, String>> = mutableListOf()
     lateinit var userAnswerMap: HashMap<String, Any>
-    var userAnswerList: MutableList<HashMap<String, Any>> = mutableListOf()
+    var userAnswerList: MutableList<UserRecord> = mutableListOf()
     lateinit var linearLayout: LinearLayout
     lateinit var see_record_btn: Button
+
+    val dbInstance = RecordDatabase.getDbInstance(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -167,6 +169,7 @@ class MainActivity : AppCompatActivity() {
 
                 val view = createMultipleChoiceView(record)
                 linearLayout.addView(view)
+
             }
 
             "numberInput" -> {
@@ -180,6 +183,7 @@ class MainActivity : AppCompatActivity() {
             "dropdown" -> {
 
                 Log.d("childCount", linearLayout.childCount.toString())
+                Log.d("listItem", userAnswerList.toString())
 
                 val view = createDropdownView(record)
                 linearLayout.addView(view)
@@ -188,6 +192,7 @@ class MainActivity : AppCompatActivity() {
             "checkbox" -> {
 
                 Log.d("childCount", linearLayout.childCount.toString())
+                Log.d("listItem", userAnswerList.toString())
 
                 val view = createCheckboxView(record)
                 linearLayout.addView(view)
@@ -196,6 +201,7 @@ class MainActivity : AppCompatActivity() {
             "camera" -> {
 
                 Log.d("childCount", linearLayout.childCount.toString())
+                Log.d("listItem", userAnswerList.toString())
 
                 val view = createCameraView(record, null)
                 linearLayout.addView(view)
@@ -204,6 +210,7 @@ class MainActivity : AppCompatActivity() {
             "textInput" -> {
 
                 Log.d("childCount", linearLayout.childCount.toString())
+                Log.d("listItem", userAnswerList.toString())
 
                 val view = createTextInputView(record)
                 linearLayout.addView(view)
@@ -259,8 +266,8 @@ class MainActivity : AppCompatActivity() {
         }
 
 
-        userAnswerMap = HashMap()
-        userAnswerMap.put("question", question)
+//        userAnswerMap = HashMap()
+//        userAnswerMap.put("question", question)
 
         val userRecord = UserRecord()
         userRecord.question = question
@@ -277,7 +284,7 @@ class MainActivity : AppCompatActivity() {
             answers.add(selectedBtn.text.toString())
             userRecord.answer = answers
 
-            userAnswerMap.put("answer", selectedBtn.text)
+//            userAnswerMap.put("answer", selectedBtn.text)
 
             Log.d("userChoice", ""+question+", "+userRecord.answer)
 
@@ -286,7 +293,17 @@ class MainActivity : AppCompatActivity() {
             processQuestion(nextId)
         }
 
-        userAnswerList.add(userAnswerMap)
+
+        lifecycleScope.launch {
+            dbInstance.recordDao().insertRecord(
+                AnswerEntity(
+                    question = userRecord.question,
+                    answer = userRecord.answer.joinToString(", ")
+                )
+            )
+        }
+
+//        userAnswerList.add(userRecord)
 
 
         //is skippable
@@ -323,13 +340,20 @@ class MainActivity : AppCompatActivity() {
         questionTxt.text = record.question.slug
 
 
+
+        val userRecord = UserRecord()
+
         submitBtn.setOnClickListener {
 
             var userTypedNumber = numberEdittext.text.toString()
 
-            userAnswerMap = HashMap()
-            userAnswerMap.put("question", record.question.slug)
-            userAnswerMap.put("answer", userTypedNumber)
+//            userAnswerMap = HashMap()
+//            userAnswerMap.put("question", record.question.slug)
+//            userAnswerMap.put("answer", userTypedNumber)
+
+            userRecord.question = record.question.slug
+            var answerList = mutableListOf<String>(userTypedNumber)
+            userRecord.answer = answerList
 
             for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(numberInputView) + 1) {
                 linearLayout.removeViewAt(i)
@@ -339,7 +363,16 @@ class MainActivity : AppCompatActivity() {
             processQuestion(record.referTo.id)
         }
 
-        userAnswerList.add(userAnswerMap)
+        lifecycleScope.launch {
+            dbInstance.recordDao().insertRecord(
+                AnswerEntity(
+                    question = userRecord.question,
+                    answer = userRecord.answer.joinToString(", ")
+                )
+            )
+        }
+
+//        userAnswerList.add(userRecord)
 
         val skipValue = record.skip.id
 
@@ -372,13 +405,22 @@ class MainActivity : AppCompatActivity() {
 
         question.text = record.question.slug
 
+        val userRecord = UserRecord()
+
         next_btn.setOnClickListener {
 
             val userTypedText = textEdittext.text.toString()
 
-            userAnswerMap = HashMap()
-            userAnswerMap.put("question", record.question.slug)
-            userAnswerMap.put("answer", userTypedText)
+//            userAnswerMap = HashMap()
+//            userAnswerMap.put("question", record.question.slug)
+//            userAnswerMap.put("answer", userTypedText)
+
+            userRecord.question = record.question.slug
+
+            val answerList = mutableListOf<String>(userTypedText)
+
+            userRecord.answer = answerList
+
 
             for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(textInputView) + 1) {
                 linearLayout.removeViewAt(i)
@@ -388,8 +430,16 @@ class MainActivity : AppCompatActivity() {
             processQuestion(record.referTo.id)
         }
 
+        lifecycleScope.launch {
+            dbInstance.recordDao().insertRecord(
+                AnswerEntity(
+                    question = userRecord.question,
+                    answer = userRecord.answer.joinToString(", ")
+                )
+            )
+        }
 
-        userAnswerList.add(userAnswerMap)
+//        userAnswerList.add(userRecord)
 
         //is skippable
         val skipValue = record?.skip?.id
@@ -425,7 +475,6 @@ class MainActivity : AppCompatActivity() {
         var constraintLayout = cameraView.findViewById<ConstraintLayout>(R.id.constraintLayout)
 
         question.text = record?.question?.slug
-
 
         Log.d("cameraViewBitmap", "" + bitmap)
 
@@ -515,12 +564,21 @@ class MainActivity : AppCompatActivity() {
             checkBoxList.add(box)
         }
 
+        val userRecord = UserRecord()
+        userRecord.question = record.question.slug
+
+        val answerList = mutableListOf<String>()
+
 
         for (box in checkBoxList) {
             box.setOnCheckedChangeListener(object : CompoundButton.OnCheckedChangeListener {
                 override fun onCheckedChanged(cmpButton: CompoundButton?, isChecked: Boolean) {
+
                     if (isChecked) {
+                        val selectedCheck = cmpButton?.text.toString()
+                        answerList.add(selectedCheck)
                         checkedOption++
+                        Log.d("selectedCheck", selectedCheck)
                     } else if (!isChecked) {
                         checkedOption--
                     }
@@ -529,6 +587,14 @@ class MainActivity : AppCompatActivity() {
             })
         }
 
+        lifecycleScope.launch {
+            dbInstance.recordDao().insertRecord(
+                AnswerEntity(
+                    question = userRecord.question,
+                    answer = userRecord.answer.joinToString(", ")
+                )
+            )
+        }
 
         next_btn.setOnClickListener {
 
@@ -612,8 +678,11 @@ class MainActivity : AppCompatActivity() {
 
         spinner.adapter = spinnerAdapter
 
-        userAnswerMap = HashMap()
-        userAnswerMap.put("question", record.question.slug)
+//        userAnswerMap = HashMap()
+//        userAnswerMap.put("question", record.question.slug)
+
+        val userRecord = UserRecord()
+        userRecord.question = record.question.slug
 
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, position: Int, p3: Long) {
@@ -632,8 +701,11 @@ class MainActivity : AppCompatActivity() {
                     val selectedOption = items[position]
                     val nextId = selectedOption.referTo.id
 
-                    userAnswerMap.put("answer", selectedOption.value)
+//                    userAnswerMap.put("answer", selectedOption.value)
 
+                    val answerList = mutableListOf<String>(selectedOption.value)
+
+                    userRecord.answer = answerList
 
                     processQuestion(nextId)
                 }
@@ -646,7 +718,16 @@ class MainActivity : AppCompatActivity() {
 
         }
 
-        userAnswerList.add(userAnswerMap)
+        lifecycleScope.launch {
+            dbInstance.recordDao().insertRecord(
+                AnswerEntity(
+                    question = userRecord.question,
+                    answer = userRecord.answer.joinToString(", ")
+                )
+            )
+        }
+
+//        userAnswerList.add(userRecord)
 
 
         //is skippable
