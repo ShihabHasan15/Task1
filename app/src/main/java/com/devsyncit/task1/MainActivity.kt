@@ -66,13 +66,11 @@ class MainActivity : AppCompatActivity() {
     var numberInputList: MutableList<HashMap<String, String>> = mutableListOf()
     lateinit var userAnswerMap: HashMap<String, Any>
     var userAnswerList: MutableList<HashMap<String, Any>> = mutableListOf()
-
     lateinit var linearLayout: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
 
         val retroInstance = RetrofitInstance.getInstance().create(ApiService::class.java)
 
@@ -365,7 +363,6 @@ class MainActivity : AppCompatActivity() {
 
         question.text = record.question.slug
 
-
         next_btn.setOnClickListener {
 
             val userTypedText = textEdittext.text.toString()
@@ -606,6 +603,9 @@ class MainActivity : AppCompatActivity() {
 
         spinner.adapter = spinnerAdapter
 
+        userAnswerMap = HashMap()
+        userAnswerMap.put("question", record.question.slug)
+
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, position: Int, p3: Long) {
 
@@ -623,6 +623,9 @@ class MainActivity : AppCompatActivity() {
                     val selectedOption = items[position]
                     val nextId = selectedOption.referTo.id
 
+                    userAnswerMap.put("answer", selectedOption.value)
+
+
                     processQuestion(nextId)
                 }
 
@@ -633,6 +636,9 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
+
+        userAnswerList.add(userAnswerMap)
+
 
         //is skippable
         val skipValue = record.skip.id
@@ -715,12 +721,21 @@ class MainActivity : AppCompatActivity() {
             cameraView.tag = "camera_view"
             var next_btn = cameraView.findViewById<Button>(R.id.next_btn)
             var skip_btn = cameraView.findViewById<Button>(R.id.skip_btn)
+
+//            userAnswerMap = HashMap()
+//            userAnswerMap.put("question", record?.question?.slug?:"")
+//            userAnswerMap.put("answer", bitmap)
+
+
             next_btn.setOnClickListener {
                 for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
                     cameraView
                 ) + 1) {
                     linearLayout.removeViewAt(i)
                 }
+
+//                userAnswerList.add(userAnswerMap)
+
                 processQuestion(record?.referTo?.id?:"")
             }
 
