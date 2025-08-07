@@ -5,7 +5,9 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.media.Image
 import android.os.Bundle
+import android.provider.CalendarContract
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +18,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.CompoundButton
+import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -33,12 +36,15 @@ import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.size
+import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.LOG_TAG
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -58,6 +64,8 @@ class MainActivity : AppCompatActivity() {
     var questionList: MutableList<HashMap<String, Any?>> = mutableListOf()
     lateinit var numberInputMap: HashMap<String, String>
     var numberInputList: MutableList<HashMap<String, String>> = mutableListOf()
+    lateinit var userAnswerMap: HashMap<String, Any>
+    var userAnswerList: MutableList<HashMap<String, Any>> = mutableListOf()
 
     lateinit var linearLayout: LinearLayout
 
@@ -189,7 +197,7 @@ class MainActivity : AppCompatActivity() {
 
                 Log.d("childCount", linearLayout.childCount.toString())
 
-                val view = createCameraView(record)
+                val view = createCameraView(record, null)
                 linearLayout.addView(view)
             }
 
@@ -213,6 +221,9 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+
+    //multiple choice view
+
     fun createMultipleChoiceView(record: RecordX): View {
 
         val multipleChoiceView =
@@ -224,6 +235,7 @@ class MainActivity : AppCompatActivity() {
 
         var questionTxt = multipleChoiceView.findViewById<TextView>(R.id.question)
         var radioGroup = multipleChoiceView.findViewById<RadioGroup>(R.id.optionRadioGroup)
+        var skip_btn = multipleChoiceView.findViewById<Button>(R.id.skip_btn)
 
         var question = record.question.slug
         var options = record.options
@@ -246,19 +258,52 @@ class MainActivity : AppCompatActivity() {
             radioButton.tag = option.referTo.id
         }
 
+
+        userAnswerMap = HashMap()
+        userAnswerMap.put("question", question)
+
+
         radioGroup.setOnCheckedChangeListener { radioGroup, checkedId ->
 
             linearLayout.removeAllViews()
             linearLayout.addView(multipleChoiceView)
             Log.d("childCount", linearLayout.childCount.toString())
             val selectedBtn = radioGroup.findViewById<RadioButton>(checkedId)
+
+            userAnswerMap.put("answer", selectedBtn.text)
+
+            Log.d("userList", userAnswerList.toString())
+
+
             val nextId = selectedBtn.tag as String
             processQuestion(nextId)
         }
 
+        userAnswerList.add(userAnswerMap)
+
+
+        //is skippable
+        val skipValue = record.skip.id
+
+        if (skipValue.equals("-1")) {
+            skip_btn.visibility = View.INVISIBLE
+        } else {
+            skip_btn.setOnClickListener {
+                for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
+                    multipleChoiceView
+                ) + 1) {
+                    linearLayout.removeViewAt(i)
+                }
+                processQuestion(record.skip.id)
+            }
+        }
+
+
         return multipleChoiceView
     }
 
+
+    //number input view
     fun createNumberInputView(record: RecordX): View {
         var numberInputView = layoutInflater.inflate(R.layout.number_input_design, null)
 
@@ -266,10 +311,18 @@ class MainActivity : AppCompatActivity() {
         var numberInput = numberInputView.findViewById<TextInputLayout>(R.id.numberInput)
         var numberEdittext = numberInputView.findViewById<TextInputEditText>(R.id.numberEdittext)
         var submitBtn = numberInputView.findViewById<MaterialButton>(R.id.submit_btn)
+        var skip_btn = numberInputView.findViewById<MaterialButton>(R.id.skip_btn)
 
         questionTxt.text = record.question.slug
 
+
         submitBtn.setOnClickListener {
+
+            var userTypedNumber = numberEdittext.text.toString()
+
+            userAnswerMap = HashMap()
+            userAnswerMap.put("question", record.question.slug)
+            userAnswerMap.put("answer", userTypedNumber)
 
             for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(numberInputView) + 1) {
                 linearLayout.removeViewAt(i)
@@ -279,19 +332,47 @@ class MainActivity : AppCompatActivity() {
             processQuestion(record.referTo.id)
         }
 
+        userAnswerList.add(userAnswerMap)
+
+        val skipValue = record.skip.id
+
+        if (skipValue.equals("-1")) {
+            skip_btn.visibility = View.INVISIBLE
+        } else {
+            skip_btn.setOnClickListener {
+                for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
+                    numberInputView
+                ) + 1) {
+                    linearLayout.removeViewAt(i)
+                }
+                processQuestion(record.skip.id)
+            }
+        }
+
         return numberInputView
     }
 
 
+    //text input view
     private fun createTextInputView(record: RecordX): View {
 
         val textInputView = layoutInflater.inflate(R.layout.text_input_design, null)
 
         var question = textInputView.findViewById<TextView>(R.id.question)
         var next_btn = textInputView.findViewById<MaterialButton>(R.id.next_btn)
+        var skip_btn = textInputView.findViewById<MaterialButton>(R.id.skip_btn)
+        var textEdittext = textInputView.findViewById<TextInputEditText>(R.id.textEdittext)
+
+        question.text = record.question.slug
 
 
         next_btn.setOnClickListener {
+
+            val userTypedText = textEdittext.text.toString()
+
+            userAnswerMap = HashMap()
+            userAnswerMap.put("question", record.question.slug)
+            userAnswerMap.put("answer", userTypedText)
 
             for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(textInputView) + 1) {
                 linearLayout.removeViewAt(i)
@@ -301,100 +382,93 @@ class MainActivity : AppCompatActivity() {
             processQuestion(record.referTo.id)
         }
 
-        question.text = record.question.slug
+
+        userAnswerList.add(userAnswerMap)
+
+        //is skippable
+        val skipValue = record?.skip?.id
+
+        if (skipValue.equals("-1")) {
+            skip_btn.visibility = View.INVISIBLE
+        } else {
+            skip_btn.setOnClickListener {
+                for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
+                    textInputView
+                ) + 1) {
+                    linearLayout.removeViewAt(i)
+                }
+                processQuestion(record?.skip?.id ?: "")
+            }
+        }
 
 
         return textInputView
     }
 
-    private fun createCameraView(record: RecordX): View {
+
+    //camera view
+    private fun createCameraView(record: RecordX?, bitmap: Bitmap?): View {
 
         val cameraView = layoutInflater.inflate(R.layout.camera_design, null)
 
         var question = cameraView.findViewById<TextView>(R.id.question)
         var next_btn = cameraView.findViewById<MaterialButton>(R.id.next_btn)
         var camera_btn = cameraView.findViewById<ImageButton>(R.id.camera_btn)
+        var skip_btn = cameraView.findViewById<MaterialButton>(R.id.skip_btn)
+        var image_preview = cameraView.findViewById<ImageView>(R.id.image_preview)
+        var constraintLayout = cameraView.findViewById<ConstraintLayout>(R.id.constraintLayout)
 
-        question.text = record.question.slug
+        question.text = record?.question?.slug
 
-        next_btn.setOnClickListener {
 
-            for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(cameraView) + 1) {
-                linearLayout.removeViewAt(i)
+        Log.d("cameraViewBitmap", "" + bitmap)
+
+        //is skippable
+        val skipValue = record?.skip?.id
+
+        if (skipValue.equals("-1")) {
+            skip_btn.visibility = View.INVISIBLE
+        } else {
+            skip_btn.setOnClickListener {
+                for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
+                    cameraView
+                ) + 1) {
+                    linearLayout.removeViewAt(i)
+                }
+                processQuestion(record?.skip?.id ?: "")
             }
-
-            Log.d("childCount", linearLayout.childCount.toString())
-            processQuestion(record.referTo.id)
         }
+
 
         camera_btn.setOnClickListener {
-            val cameraPreviewView = layoutInflater.inflate(R.layout.camera_preview_layout, null)
-            var previewView: PreviewView = cameraPreviewView.findViewById(R.id.camera_preview)
-            var capture_btn: ImageButton = cameraPreviewView.findViewById(R.id.capture_btn)
+            startCamera(record)
+        }
 
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    android.Manifest.permission.CAMERA
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
 
-                cameraProviderFuture.addListener({
-                    val cameraProvider = cameraProviderFuture.get()
+        if (bitmap != null) {
 
-                    val preview = Preview.Builder().build().also {
-                        it.setSurfaceProvider(previewView.surfaceProvider)
-                    }
+//            next_btn.setOnClickListener {
+//
+//                Log.d("childCount", linearLayout.childCount.toString())
+//                processQuestion(record?.referTo?.id ?: "")
+//            }
 
-                    val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+            camera_btn.visibility = View.GONE
+            image_preview.visibility = View.VISIBLE
+            image_preview.setImageBitmap(bitmap)
+            constraintLayout.setBackgroundColor(Color.WHITE)
 
-                    val imageCapture = ImageCapture.Builder()
-                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
-
-                    capture_btn.setOnClickListener {
-                        imageCapture.takePicture(
-                            ContextCompat.getMainExecutor(this),
-                            object : ImageCapture.OnImageCapturedCallback(){
-                                override fun onCaptureSuccess(image: ImageProxy) {
-                                    super.onCaptureSuccess(image)
-                                    Log.d("captured", "image captured")
-                                    val proxy = image.planes[0]
-                                    val buffer = proxy.buffer
-                                    val bytes = ByteArray(buffer.remaining())
-                                    buffer.get(bytes)
-                                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                                    showCapturedImage(bitmap)
-                                    image.close()
-                                }
-                            }
-                        )
-                    }
-
-                    try {
-                        cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(
-                            this, cameraSelector, preview, imageCapture
-                        )
-                    } catch (e: Exception) {
-                        Log.d("Exception", "Exception: " + e.toString())
-                    }
-                }, ContextCompat.getMainExecutor(this))
-            } else {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(android.Manifest.permission.CAMERA),
-                    100
-                )
+            image_preview.setOnClickListener {
+                startCamera(record)
             }
 
-            var dialog = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
-            dialog.setContentView(cameraPreviewView)
-            dialog.show()
         }
+
 
         return cameraView
     }
 
+    //check box view
     private fun createCheckboxView(record: RecordX): View {
 
         val checkBoxView = layoutInflater.inflate(R.layout.check_box_design, null)
@@ -411,10 +485,21 @@ class MainActivity : AppCompatActivity() {
         question.text = record.question.slug
 
         val options = record.options
+
+        //is skippable
         val skipValue = record.skip.id
 
         if (skipValue.equals("-1")) {
             skip_btn.visibility = View.INVISIBLE
+        } else {
+            skip_btn.setOnClickListener {
+                for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
+                    checkBoxView
+                ) + 1) {
+                    linearLayout.removeViewAt(i)
+                }
+                processQuestion(record.skip.id)
+            }
         }
 
         for (option in options) {
@@ -462,9 +547,11 @@ class MainActivity : AppCompatActivity() {
         return checkBoxView
     }
 
+    //drop down view
     private fun createDropdownView(record: RecordX): View {
 
         val dropDownView = layoutInflater.inflate(R.layout.drop_down_design, null)
+        var skip_btn = dropDownView.findViewById<Button>(R.id.skip_btn)
 
         var options = record.options
 
@@ -547,10 +634,48 @@ class MainActivity : AppCompatActivity() {
 
         }
 
+        //is skippable
+        val skipValue = record.skip.id
+
+        if (skipValue.equals("-1")) {
+            skip_btn.visibility = View.INVISIBLE
+        } else {
+            skip_btn.setOnClickListener {
+                for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
+                    dropDownView
+                ) + 1) {
+                    linearLayout.removeViewAt(i)
+                }
+                processQuestion(record.skip.id)
+            }
+        }
+
         return dropDownView
     }
 
-    fun showCapturedImage(bitmap:Bitmap){
+    fun takePicture(imageCapture: ImageCapture, record: RecordX?) {
+        imageCapture.takePicture(
+            ContextCompat.getMainExecutor(this),
+            object : ImageCapture.OnImageCapturedCallback() {
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    super.onCaptureSuccess(image)
+                    Log.d("captured", "image captured")
+                    val proxy = image.planes[0]
+                    val buffer = proxy.buffer
+                    val bytes = ByteArray(buffer.remaining())
+                    buffer.get(bytes)
+                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    showCapturedImage(bitmap, record)
+                    image.close()
+                }
+            }
+        )
+
+
+    }
+
+
+    fun showCapturedImage(bitmap: Bitmap, record: RecordX?) {
 
         val view = layoutInflater.inflate(R.layout.show_captured_image_layout, null)
         var preview_imageView = view.findViewById<ImageView>(R.id.preview_image)
@@ -564,7 +689,112 @@ class MainActivity : AppCompatActivity() {
         dialog.setContentView(view)
         dialog.show()
 
+        retake_btn.setOnClickListener {
+            dialog.dismiss()
+            startCamera(record)
+        }
 
+        forward_btn.setOnClickListener {
+
+            for (i in 0 until linearLayout.childCount) {
+                val child = linearLayout.getChildAt(i)
+                if (child.tag == "camera_view") {
+                    linearLayout.removeView(child)
+                    break
+                }
+            }
+
+            dialog.dismiss()
+
+//            imagePass = this
+//
+//            imagePass?.imageBitmapDataPass(bitmap)
+
+
+            var cameraView = createCameraView(record, bitmap)
+            cameraView.tag = "camera_view"
+            var next_btn = cameraView.findViewById<Button>(R.id.next_btn)
+            var skip_btn = cameraView.findViewById<Button>(R.id.skip_btn)
+            next_btn.setOnClickListener {
+                for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
+                    cameraView
+                ) + 1) {
+                    linearLayout.removeViewAt(i)
+                }
+                processQuestion(record?.referTo?.id?:"")
+            }
+
+            //is skippable
+            val skipValue = record?.skip?.id
+
+            if (skipValue.equals("-1")) {
+                skip_btn.visibility = View.INVISIBLE
+            } else {
+                skip_btn.setOnClickListener {
+                    for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
+                        cameraView
+                    ) + 1) {
+                        linearLayout.removeViewAt(i)
+                    }
+                    processQuestion(record?.skip?.id?:"")
+                }
+            }
+
+            linearLayout.addView(cameraView)
+            linearLayout.removeViewAt(linearLayout.indexOfChild(cameraView)-1)
+        }
+    }
+
+    fun startCamera(record: RecordX?) {
+        val cameraPreviewView = layoutInflater.inflate(R.layout.camera_preview_layout, null)
+        var previewView: PreviewView = cameraPreviewView.findViewById(R.id.camera_preview)
+        var capture_btn: ImageButton = cameraPreviewView.findViewById(R.id.capture_btn)
+
+        if (ContextCompat.checkSelfPermission(
+                this,
+                android.Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+
+            var dialog = Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+            dialog.setContentView(cameraPreviewView)
+            dialog.show()
+
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
+            cameraProviderFuture.addListener({
+                val cameraProvider = cameraProviderFuture.get()
+
+                val preview = Preview.Builder().build().also {
+                    it.setSurfaceProvider(previewView.surfaceProvider)
+                }
+
+                val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+
+                val imageCapture = ImageCapture.Builder()
+                    .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
+
+                capture_btn.setOnClickListener {
+                    dialog.dismiss()
+                    takePicture(imageCapture, record)
+                }
+
+                try {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        this, cameraSelector, preview, imageCapture
+                    )
+                } catch (e: Exception) {
+                    Log.d("Exception", "Exception: " + e.toString())
+                }
+            }, ContextCompat.getMainExecutor(this))
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(android.Manifest.permission.CAMERA),
+                100
+            )
+        }
     }
 
 }

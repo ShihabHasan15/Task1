@@ -28,6 +28,17 @@
     </RadioGroup>
 
 
+    <Button
+        android:id="@+id/skip_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Skip"
+        android:textColor="@color/black"
+        android:visibility="visible"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        app:layout_constraintTop_toTopOf="@+id/optionRadioGroup"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginRight="20dp"/>
 
 
 
