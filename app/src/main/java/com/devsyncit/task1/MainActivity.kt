@@ -69,13 +69,15 @@ class MainActivity : AppCompatActivity() {
     lateinit var linearLayout: LinearLayout
     lateinit var see_record_btn: Button
 
-    val dbInstance = RecordDatabase.getDbInstance(this)
+    lateinit var dbInstance: RecordDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         val retroInstance = RetrofitInstance.getInstance().create(ApiService::class.java)
+
+        dbInstance = RecordDatabase.getDbInstance(this@MainActivity)
 
         linearLayout = findViewById(R.id.rootLayout)
 
@@ -297,6 +299,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             dbInstance.recordDao().insertRecord(
                 AnswerEntity(
+                    id = 0,
                     question = userRecord.question,
                     answer = userRecord.answer.joinToString(", ")
                 )
@@ -366,6 +369,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             dbInstance.recordDao().insertRecord(
                 AnswerEntity(
+                    id = 0,
                     question = userRecord.question,
                     answer = userRecord.answer.joinToString(", ")
                 )
@@ -433,6 +437,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             dbInstance.recordDao().insertRecord(
                 AnswerEntity(
+                    id = 0,
                     question = userRecord.question,
                     answer = userRecord.answer.joinToString(", ")
                 )
@@ -590,6 +595,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             dbInstance.recordDao().insertRecord(
                 AnswerEntity(
+                    id = 0,
                     question = userRecord.question,
                     answer = userRecord.answer.joinToString(", ")
                 )
@@ -715,12 +721,12 @@ class MainActivity : AppCompatActivity() {
             override fun onNothingSelected(p0: AdapterView<*>?) {
 
             }
-
         }
 
         lifecycleScope.launch {
             dbInstance.recordDao().insertRecord(
                 AnswerEntity(
+                    id = 0,
                     question = userRecord.question,
                     answer = userRecord.answer.joinToString(", ")
                 )
