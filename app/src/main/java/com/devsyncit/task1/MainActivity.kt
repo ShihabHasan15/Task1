@@ -1,6 +1,7 @@
 package com.devsyncit.task1
 
 import android.app.Dialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -74,6 +75,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        Log.d("lifecycle", "On Create called")
+
         val retroInstance = RetrofitInstance.getInstance().create(ApiService::class.java)
 
         dbInstance = RecordDatabase.getDbInstance(this@MainActivity)
@@ -82,15 +85,19 @@ class MainActivity : AppCompatActivity() {
 
         see_record_btn = findViewById(R.id.see_record_btn)
 
-        //multiple choice question adapter set up
 
-//        var multipleChoiceAdapter = MultipleChoiceAdapter(questionList, numberInputList, this)
-//        item_list.adapter = multipleChoiceAdapter
-//        item_list.layoutManager = LinearLayoutManager(this)
+        lifecycleScope.launch {
+            dbInstance.recordDao().clearAll()
+        }
+
+
+        see_record_btn.setOnClickListener {
+            startActivity(Intent(this, SeeRecord::class.java))
+        }
+
 
         lifecycleScope.launch {
             val records = retroInstance.getRecord().body()
-//            val record = records?.record[0] ?: return@launch
 
             records?.record?.forEach {
                 questionMapById[it.id] = it
@@ -99,59 +106,7 @@ class MainActivity : AppCompatActivity() {
             Log.d("keys", questionMapById.keys.toString())
 
             processQuestion("1")
-//            for (record in recordX!!){
-//                val id = record.id
-//                val type = record.type
-//                val question = record.question
-//
-////                questionMap = HashMap()
-////                questionMap.put("id", id)
-////                questionMap.put("type", type)
-////                questionMap.put("question", question.slug)
-//
-//                if(type.equals("multipleChoice")){
-//                    val options = record.options
-//
-//                    var optionList: MutableList<HashMap<String, String>> = mutableListOf()
-//
-//                    for (option in options){
-//                        optionMap = HashMap()
-//                        val value = option.value
-//                        val referToX = option.referTo
-//                        val referTo = referToX.id
-//                        optionMap.put("value", value)
-//                        optionMap.put("referTo", referTo)
-//                        optionList.add(optionMap)
-//                    }
-//
-////                    questionMap.put("options", optionList)
-////
-////                    questionList.add(questionMap)
-//
-//                    multipleChoiceAdapter.notifyDataSetChanged()
-//
-//                }
-//
-//                if (type.equals("numberInput")){
-//
-//
-//                    val validations = record.validations
-//                    val regex = validations.regex
-//                    val referToX = record.referTo
-//                    val referTo = referToX.id
-//
-//                    numberInputMap = HashMap()
-//                    numberInputMap.put("regex", regex)
-//                    numberInputMap.put("referTo", referTo)
-//                    numberInputList.add(numberInputMap)
-//
-//                    multipleChoiceAdapter.notifyDataSetChanged()
-//
-//                }
-//
-//            }
-//
-//            Log.d("records", ""+records?.record)
+
         }
 
     }
@@ -266,10 +221,6 @@ class MainActivity : AppCompatActivity() {
             radioButton.tag = option.referTo.id
         }
 
-
-//        userAnswerMap = HashMap()
-//        userAnswerMap.put("question", question)
-
         val userRecord = UserRecord()
         userRecord.question = question
 
@@ -295,27 +246,25 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
 
-                if (rowId == -1L){
+                if (rowId == -1L) {
                     dbInstance.recordDao().updateRecord(
                         question = userRecord.question,
                         answer = userRecord.answer.joinToString(", ")
                     )
                 }
 
+                dbInstance.recordDao().deleteFromSpecificField(
+                    startQuestion = userRecord.question
+                )
+
             }
 
-
-//            userAnswerMap.put("answer", selectedBtn.text)
-
-            Log.d("userChoice", ""+question+", "+userRecord.answer)
+            Log.d("userChoice", "" + question + ", " + userRecord.answer)
 
 
             val nextId = selectedBtn.tag as String
             processQuestion(nextId)
         }
-
-
-//        userAnswerList.add(userRecord)
 
 
         //is skippable
@@ -357,10 +306,6 @@ class MainActivity : AppCompatActivity() {
 
             var userTypedNumber = numberEdittext.text.toString()
 
-//            userAnswerMap = HashMap()
-//            userAnswerMap.put("question", record.question.slug)
-//            userAnswerMap.put("answer", userTypedNumber)
-
             //db insertion
             userRecord.question = record.question.slug
             var answerList = mutableListOf<String>()
@@ -376,12 +321,16 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
 
-                if (rowId == -1L){
+                if (rowId == -1L) {
                     dbInstance.recordDao().updateRecord(
                         question = userRecord.question,
                         answer = userRecord.answer.joinToString(", ")
                     )
                 }
+
+                dbInstance.recordDao().deleteFromSpecificField(
+                    startQuestion = userRecord.question
+                )
 
             }
 
@@ -393,9 +342,6 @@ class MainActivity : AppCompatActivity() {
             Log.d("childCount", linearLayout.childCount.toString())
             processQuestion(record.referTo.id)
         }
-
-
-//        userAnswerList.add(userRecord)
 
         val skipValue = record.skip.id
 
@@ -434,10 +380,6 @@ class MainActivity : AppCompatActivity() {
 
             val userTypedText = textEdittext.text.toString()
 
-//            userAnswerMap = HashMap()
-//            userAnswerMap.put("question", record.question.slug)
-//            userAnswerMap.put("answer", userTypedText)
-
             //db insertion
             userRecord.question = record.question.slug
 
@@ -454,12 +396,16 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
 
-                if (rowId == -1L){
+                if (rowId == -1L) {
                     dbInstance.recordDao().updateRecord(
                         question = userRecord.question,
                         answer = userRecord.answer.joinToString(", ")
                     )
                 }
+
+                dbInstance.recordDao().deleteFromSpecificField(
+                    startQuestion = userRecord.question
+                )
 
             }
 
@@ -470,8 +416,6 @@ class MainActivity : AppCompatActivity() {
             Log.d("childCount", linearLayout.childCount.toString())
             processQuestion(record.referTo.id)
         }
-
-//        userAnswerList.add(userRecord)
 
         //is skippable
         val skipValue = record?.skip?.id
@@ -533,12 +477,6 @@ class MainActivity : AppCompatActivity() {
 
 
         if (bitmap != null) {
-
-//            next_btn.setOnClickListener {
-//
-//                Log.d("childCount", linearLayout.childCount.toString())
-//                processQuestion(record?.referTo?.id ?: "")
-//            }
 
             camera_btn.visibility = View.GONE
             image_preview.visibility = View.VISIBLE
@@ -609,14 +547,14 @@ class MainActivity : AppCompatActivity() {
                     val selectedCheck = cmpButton?.text.toString()
 
                     if (isChecked) {
-                        if (!answerList.contains(selectedCheck)){
+                        if (!answerList.contains(selectedCheck)) {
                             answerList.add(selectedCheck)
                             checkedOption++
                             Log.d("selectedCheck", selectedCheck)
                         }
                     } else if (!isChecked) {
-                            answerList.remove(selectedCheck)
-                            checkedOption--
+                        answerList.remove(selectedCheck)
+                        checkedOption--
                     }
                 }
 
@@ -638,12 +576,16 @@ class MainActivity : AppCompatActivity() {
                     )
                 )
 
-                if (rowId == -1L){
+                if (rowId == -1L) {
                     dbInstance.recordDao().updateRecord(
                         question = userRecord.question,
                         answer = userRecord.answer.joinToString(", ")
                     )
                 }
+
+                dbInstance.recordDao().deleteFromSpecificField(
+                    startQuestion = userRecord.question
+                )
 
             }
 
@@ -725,9 +667,6 @@ class MainActivity : AppCompatActivity() {
 
         spinner.adapter = spinnerAdapter
 
-//        userAnswerMap = HashMap()
-//        userAnswerMap.put("question", record.question.slug)
-
         val userRecord = UserRecord()
         userRecord.question = record.question.slug
 
@@ -747,8 +686,6 @@ class MainActivity : AppCompatActivity() {
 
                     val selectedOption = items[position]
                     val nextId = selectedOption.referTo.id
-
-//                    userAnswerMap.put("answer", selectedOption.value)
 
                     //db insertion
                     val answerList = mutableListOf<String>()
@@ -771,6 +708,10 @@ class MainActivity : AppCompatActivity() {
                             )
                         }
 
+                        dbInstance.recordDao().deleteFromSpecificField(
+                            startQuestion = userRecord.question
+                        )
+
                     }
 
                     processQuestion(nextId)
@@ -782,9 +723,6 @@ class MainActivity : AppCompatActivity() {
 
             }
         }
-
-//        userAnswerList.add(userRecord)
-
 
         //is skippable
         val skipValue = record.skip.id
@@ -848,61 +786,102 @@ class MainActivity : AppCompatActivity() {
 
         forward_btn.setOnClickListener {
 
-            for (i in 0 until linearLayout.childCount) {
-                val child = linearLayout.getChildAt(i)
-                if (child.tag == "camera_view") {
-                    linearLayout.removeView(child)
-                    break
-                }
-            }
-
             dialog.dismiss()
 
-//            imagePass = this
-//
-//            imagePass?.imageBitmapDataPass(bitmap)
+            val cameraViewImageView = findViewById<ImageView>(R.id.image_preview)
 
+            val hasImageAlready = cameraViewImageView.drawable != null
 
-            var cameraView = createCameraView(record, bitmap)
-            cameraView.tag = "camera_view"
-            var next_btn = cameraView.findViewById<Button>(R.id.next_btn)
-            var skip_btn = cameraView.findViewById<Button>(R.id.skip_btn)
+            cameraViewImageView.setImageBitmap(bitmap)
 
-//            userAnswerMap = HashMap()
-//            userAnswerMap.put("question", record?.question?.slug?:"")
-//            userAnswerMap.put("answer", bitmap)
+            if (!hasImageAlready) {
+                var cameraView = createCameraView(record, bitmap)
+                cameraView.tag = "camera_view"
 
+                var skip_btn = cameraView.findViewById<Button>(R.id.skip_btn)
 
-            next_btn.setOnClickListener {
-                for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
-                    cameraView
-                ) + 1) {
-                    linearLayout.removeViewAt(i)
-                }
+                val skipValue = record?.skip?.id
 
-//                userAnswerList.add(userAnswerMap)
-
-                processQuestion(record?.referTo?.id?:"")
-            }
-
-            //is skippable
-            val skipValue = record?.skip?.id
-
-            if (skipValue.equals("-1")) {
-                skip_btn.visibility = View.INVISIBLE
-            } else {
-                skip_btn.setOnClickListener {
-                    for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
-                        cameraView
-                    ) + 1) {
-                        linearLayout.removeViewAt(i)
+                if (skipValue.equals("-1")) {
+                    skip_btn.visibility = View.INVISIBLE
+                } else {
+                    skip_btn.setOnClickListener {
+                        for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(
+                            cameraView
+                        ) + 1) {
+                            linearLayout.removeViewAt(i)
+                        }
+                        processQuestion(record?.skip?.id ?: "")
                     }
-                    processQuestion(record?.skip?.id?:"")
                 }
+
+                val userRecord = UserRecord()
+                userRecord.question = record?.question?.slug!!
+
+                var answerList = mutableListOf<String>()
+                answerList.add(bitmap.toString())
+                userRecord.answer = answerList
+
+
+                lifecycleScope.launch {
+                    dbInstance.recordDao().insertRecord(
+                        AnswerEntity(
+                            id = 0,
+                            question = userRecord.question,
+                            answer = userRecord.answer.joinToString(", ")
+                        )
+                    )
+                }
+
+                linearLayout.addView(cameraView)
+                linearLayout.removeViewAt(linearLayout.indexOfChild(cameraView) - 1)
+
+                processQuestion(record?.referTo?.id ?: "")
+
+            } else {
+
+                var existingNextView: View? = null
+
+                for (i in 0 until linearLayout.childCount) {
+                    val child = linearLayout.getChildAt(i)
+                    if (child.tag == "camera_view") {
+                        existingNextView = child
+                        break
+                    }
+                }
+
+                if (existingNextView != null) {
+                    val index = linearLayout.indexOfChild(existingNextView)
+                    linearLayout.removeView(existingNextView)
+
+                    val cameraView = createCameraView(record, bitmap)
+                    cameraView.tag = "camera_view"
+                    linearLayout.addView(cameraView, index)
+                    linearLayout.removeViewAt(linearLayout.indexOfChild(cameraView) + 1)
+
+                    val userRecord = UserRecord()
+                    userRecord.question = record?.question?.slug!!
+                    var answerList = mutableListOf<String>()
+                    answerList.add(bitmap.toString())
+                    userRecord.answer = answerList
+
+                    lifecycleScope.launch {
+                        dbInstance.recordDao().updateRecord(
+                            question = userRecord.question,
+                            answer = userRecord.answer.joinToString(", ")
+                        )
+
+                        dbInstance.recordDao().deleteFromSpecificField(
+                            startQuestion = userRecord.question
+                        )
+                    }
+
+                    processQuestion(record?.referTo?.id ?: "")
+
+                }
+
             }
 
-            linearLayout.addView(cameraView)
-            linearLayout.removeViewAt(linearLayout.indexOfChild(cameraView)-1)
         }
     }
 
@@ -956,6 +935,11 @@ class MainActivity : AppCompatActivity() {
                 100
             )
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("lifecycle", "On Destroy called")
     }
 
 }

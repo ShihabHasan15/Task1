@@ -12,7 +12,6 @@ abstract class RecordDatabase: RoomDatabase() {
 
     abstract fun recordDao(): UserRecordDao
 
-
     companion object{
 
         val migration_1_2 = object :Migration(1,2){

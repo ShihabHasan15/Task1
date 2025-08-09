@@ -9,11 +9,12 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class RecordAdapter(var recordList: List<HashMap<String, Any>>, var context: Context): RecyclerView.Adapter<RecordAdapter.RecordViewHolder>() {
+class RecordAdapter(var context: Context, var recordList: List<AnswerEntity>): RecyclerView.Adapter<RecordAdapter.RecordViewHolder>() {
 
     inner class RecordViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
 
         var questionTxt = itemView.findViewById<TextView>(R.id.question_txt)
+        var answerTxt = itemView.findViewById<TextView>(R.id.answer_txt)
         var txt_layout = itemView.findViewById<LinearLayout>(R.id.txt_layout)
 
     }
@@ -29,26 +30,27 @@ class RecordAdapter(var recordList: List<HashMap<String, Any>>, var context: Con
 
         var record = recordList[position]
 
-        var question = record.get("question") as String
+        var question = record.question
 
-        var answers = record.get("answer") as MutableList<String>
+        var answer = record.answer
 
         holder.questionTxt.text = question
 
-        for (answer in answers){
-            var answerTextView = TextView(context)
-            answerTextView.text = answer
-            answerTextView.setTextColor(Color.LTGRAY)
-            answerTextView.setTextSize(14f)
-            holder.txt_layout.addView(answerTextView)
-        }
-
+        holder.answerTxt.text = answer
 
     }
 
     override fun getItemCount(): Int {
 
         return recordList.size
+    }
+
+    override fun getItemViewType(position: Int): Int {
+
+        val record = recordList.get(position)
+
+
+        return 0
     }
 
 }
