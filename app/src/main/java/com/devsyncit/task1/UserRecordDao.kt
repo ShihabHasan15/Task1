@@ -4,17 +4,18 @@ import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 
 @Dao
 interface UserRecordDao {
 
-    @Insert
-    suspend fun insertRecord(answer: AnswerEntity)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRecord(answer: AnswerEntity): Long
 
-    @Update
-    suspend fun updateRecord(answer: AnswerEntity)
+    @Query("UPDATE user_record SET answer = :answer WHERE question = :question")
+    suspend fun updateRecord(question: String, answer: String)
 
     @Delete
     suspend fun deleteRecord(answer: AnswerEntity)

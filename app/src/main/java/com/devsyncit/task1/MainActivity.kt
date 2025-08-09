@@ -44,7 +44,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.size
 import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
 import androidx.lifecycle.lifecycleScope
-import androidx.paging.LOG_TAG
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.button.MaterialButton
@@ -286,6 +285,26 @@ class MainActivity : AppCompatActivity() {
             answers.add(selectedBtn.text.toString())
             userRecord.answer = answers
 
+            //db insertion
+            lifecycleScope.launch {
+                val rowId = dbInstance.recordDao().insertRecord(
+                    AnswerEntity(
+                        id = 0,
+                        question = userRecord.question,
+                        answer = userRecord.answer.joinToString(", ")
+                    )
+                )
+
+                if (rowId == -1L){
+                    dbInstance.recordDao().updateRecord(
+                        question = userRecord.question,
+                        answer = userRecord.answer.joinToString(", ")
+                    )
+                }
+
+            }
+
+
 //            userAnswerMap.put("answer", selectedBtn.text)
 
             Log.d("userChoice", ""+question+", "+userRecord.answer)
@@ -295,16 +314,6 @@ class MainActivity : AppCompatActivity() {
             processQuestion(nextId)
         }
 
-
-        lifecycleScope.launch {
-            dbInstance.recordDao().insertRecord(
-                AnswerEntity(
-                    id = 0,
-                    question = userRecord.question,
-                    answer = userRecord.answer.joinToString(", ")
-                )
-            )
-        }
 
 //        userAnswerList.add(userRecord)
 
@@ -342,8 +351,6 @@ class MainActivity : AppCompatActivity() {
 
         questionTxt.text = record.question.slug
 
-
-
         val userRecord = UserRecord()
 
         submitBtn.setOnClickListener {
@@ -354,9 +361,30 @@ class MainActivity : AppCompatActivity() {
 //            userAnswerMap.put("question", record.question.slug)
 //            userAnswerMap.put("answer", userTypedNumber)
 
+            //db insertion
             userRecord.question = record.question.slug
-            var answerList = mutableListOf<String>(userTypedNumber)
+            var answerList = mutableListOf<String>()
+            answerList.add(userTypedNumber)
             userRecord.answer = answerList
+
+            lifecycleScope.launch {
+                val rowId = dbInstance.recordDao().insertRecord(
+                    AnswerEntity(
+                        id = 0,
+                        question = userRecord.question,
+                        answer = userRecord.answer.joinToString(", ")
+                    )
+                )
+
+                if (rowId == -1L){
+                    dbInstance.recordDao().updateRecord(
+                        question = userRecord.question,
+                        answer = userRecord.answer.joinToString(", ")
+                    )
+                }
+
+            }
+
 
             for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(numberInputView) + 1) {
                 linearLayout.removeViewAt(i)
@@ -366,15 +394,6 @@ class MainActivity : AppCompatActivity() {
             processQuestion(record.referTo.id)
         }
 
-        lifecycleScope.launch {
-            dbInstance.recordDao().insertRecord(
-                AnswerEntity(
-                    id = 0,
-                    question = userRecord.question,
-                    answer = userRecord.answer.joinToString(", ")
-                )
-            )
-        }
 
 //        userAnswerList.add(userRecord)
 
@@ -419,12 +438,30 @@ class MainActivity : AppCompatActivity() {
 //            userAnswerMap.put("question", record.question.slug)
 //            userAnswerMap.put("answer", userTypedText)
 
+            //db insertion
             userRecord.question = record.question.slug
 
             val answerList = mutableListOf<String>(userTypedText)
 
             userRecord.answer = answerList
 
+            lifecycleScope.launch {
+                val rowId = dbInstance.recordDao().insertRecord(
+                    AnswerEntity(
+                        id = 0,
+                        question = userRecord.question,
+                        answer = userRecord.answer.joinToString(", ")
+                    )
+                )
+
+                if (rowId == -1L){
+                    dbInstance.recordDao().updateRecord(
+                        question = userRecord.question,
+                        answer = userRecord.answer.joinToString(", ")
+                    )
+                }
+
+            }
 
             for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(textInputView) + 1) {
                 linearLayout.removeViewAt(i)
@@ -432,16 +469,6 @@ class MainActivity : AppCompatActivity() {
 
             Log.d("childCount", linearLayout.childCount.toString())
             processQuestion(record.referTo.id)
-        }
-
-        lifecycleScope.launch {
-            dbInstance.recordDao().insertRecord(
-                AnswerEntity(
-                    id = 0,
-                    question = userRecord.question,
-                    answer = userRecord.answer.joinToString(", ")
-                )
-            )
         }
 
 //        userAnswerList.add(userRecord)
@@ -579,32 +606,47 @@ class MainActivity : AppCompatActivity() {
             box.setOnCheckedChangeListener(object : CompoundButton.OnCheckedChangeListener {
                 override fun onCheckedChanged(cmpButton: CompoundButton?, isChecked: Boolean) {
 
+                    val selectedCheck = cmpButton?.text.toString()
+
                     if (isChecked) {
-                        val selectedCheck = cmpButton?.text.toString()
-                        answerList.add(selectedCheck)
-                        checkedOption++
-                        Log.d("selectedCheck", selectedCheck)
+                        if (!answerList.contains(selectedCheck)){
+                            answerList.add(selectedCheck)
+                            checkedOption++
+                            Log.d("selectedCheck", selectedCheck)
+                        }
                     } else if (!isChecked) {
-                        checkedOption--
+                            answerList.remove(selectedCheck)
+                            checkedOption--
                     }
                 }
 
             })
         }
 
-        lifecycleScope.launch {
-            dbInstance.recordDao().insertRecord(
-                AnswerEntity(
-                    id = 0,
-                    question = userRecord.question,
-                    answer = userRecord.answer.joinToString(", ")
-                )
-            )
-        }
-
         next_btn.setOnClickListener {
 
             Log.d("checkedOption", checkedOption.toString())
+
+            userRecord.answer = answerList
+
+            lifecycleScope.launch {
+                val rowId = dbInstance.recordDao().insertRecord(
+                    AnswerEntity(
+                        id = 0,
+                        question = userRecord.question,
+                        answer = userRecord.answer.joinToString(", ")
+                    )
+                )
+
+                if (rowId == -1L){
+                    dbInstance.recordDao().updateRecord(
+                        question = userRecord.question,
+                        answer = userRecord.answer.joinToString(", ")
+                    )
+                }
+
+            }
+
 
             if (checkedOption <= 0) {
                 for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(checkBoxView) + 1) {
@@ -615,7 +657,6 @@ class MainActivity : AppCompatActivity() {
                 for (i in linearLayout.childCount - 1 downTo linearLayout.indexOfChild(checkBoxView) + 1) {
                     linearLayout.removeViewAt(i)
                 }
-
                 Log.d("childCount", linearLayout.childCount.toString())
                 processQuestion(record.referTo.id)
             }
@@ -709,9 +750,28 @@ class MainActivity : AppCompatActivity() {
 
 //                    userAnswerMap.put("answer", selectedOption.value)
 
-                    val answerList = mutableListOf<String>(selectedOption.value)
-
+                    //db insertion
+                    val answerList = mutableListOf<String>()
+                    answerList.add(selectedOption.value)
                     userRecord.answer = answerList
+
+                    lifecycleScope.launch {
+                        val rowId = dbInstance.recordDao().insertRecord(
+                            AnswerEntity(
+                                id = 0,
+                                question = userRecord.question,
+                                answer = userRecord.answer.joinToString(", ")
+                            )
+                        )
+
+                        if (rowId == -1L) {
+                            dbInstance.recordDao().updateRecord(
+                                question = userRecord.question,
+                                answer = userRecord.answer.joinToString(", ")
+                            )
+                        }
+
+                    }
 
                     processQuestion(nextId)
                 }
@@ -721,16 +781,6 @@ class MainActivity : AppCompatActivity() {
             override fun onNothingSelected(p0: AdapterView<*>?) {
 
             }
-        }
-
-        lifecycleScope.launch {
-            dbInstance.recordDao().insertRecord(
-                AnswerEntity(
-                    id = 0,
-                    question = userRecord.question,
-                    answer = userRecord.answer.joinToString(", ")
-                )
-            )
         }
 
 //        userAnswerList.add(userRecord)
